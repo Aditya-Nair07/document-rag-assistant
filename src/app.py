@@ -118,17 +118,22 @@ with st.sidebar:
     # Document Uploader
     st.markdown("### 📁 Document Knowledge Base")
     uploaded_files = st.file_uploader(
-        "Upload documents",
+        "Upload new documents",
         type=["pdf", "txt", "docx", "csv"],
         accept_multiple_files=True,
-        help="Upload custom documents to expand your RAG index"
+        help="Upload custom documents to expand or replace your RAG index"
     )
+
+    replace_existing = st.checkbox("Replace previous uploaded files", value=True, help="If checked, removes previously uploaded files so you only search the newly uploaded files.")
 
     if uploaded_files:
         if st.button("🚀 Process & Index Documents", type="primary", use_container_width=True):
-            with st.spinner("Saving documents and updating FAISS vector store..."):
+            with st.spinner("Processing documents and updating FAISS vector index..."):
                 target_dir = DATA_DIR / "uploads"
+                if replace_existing and target_dir.exists():
+                    shutil.rmtree(target_dir, ignore_errors=True)
                 target_dir.mkdir(parents=True, exist_ok=True)
+
                 for file in uploaded_files:
                     save_path = target_dir / file.name
                     with open(save_path, "wb") as f:
@@ -136,15 +141,38 @@ with st.sidebar:
                 
                 # Re-index
                 try:
+                    st.cache_resource.clear()
                     engine = load_rag_engine(api_key=user_api_key or None)
                     num_docs = engine.rebuild_index(data_dir=str(DATA_DIR))
-                    st.success(f"Indexed {len(uploaded_files)} new file(s)! Total corpus: {num_docs} documents.")
-                    st.cache_resource.clear()
+                    st.success(f"Indexed {len(uploaded_files)} file(s)! Total corpus: {num_docs} document parts.")
+                    st.session_state.messages = []
+                    st.rerun()
                 except Exception as err:
                     st.error(f"Error rebuilding index: {err}")
 
+    # Active Files Display
+    active_files = []
+    if (DATA_DIR / "uploads").exists():
+        active_files.extend([f.name for f in (DATA_DIR / "uploads").glob("*") if f.is_file()])
+    if (DATA_DIR / "text_files").exists():
+        active_files.extend([f.name for f in (DATA_DIR / "text_files").glob("*") if f.is_file()])
+
+    if active_files:
+        with st.expander(f"📑 Active Files ({len(active_files)})", expanded=False):
+            for fname in active_files:
+                st.markdown(f"- `{fname}`")
+
+    if (DATA_DIR / "uploads").exists() and any((DATA_DIR / "uploads").iterdir()):
+        if st.button("🗑️ Reset to Default Samples", use_container_width=True):
+            shutil.rmtree(DATA_DIR / "uploads", ignore_errors=True)
+            st.cache_resource.clear()
+            engine = load_rag_engine(api_key=user_api_key or None)
+            engine.rebuild_index(data_dir=str(DATA_DIR))
+            st.session_state.messages = []
+            st.rerun()
+
     st.divider()
-    if st.button("🗑️ Clear Chat History", use_container_width=True):
+    if st.button("💬 Clear Chat History", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
 
