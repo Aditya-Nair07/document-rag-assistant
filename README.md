@@ -1,10 +1,14 @@
 # ⚡ DocuMind AI — Modular Document RAG Engine
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit%20Cloud-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://documind-rag-ad.streamlit.app/)
+
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![LangChain](https://img.shields.io/badge/LangChain-v0.2-1C3C3C?logo=langchain&logoColor=white)](https://python.langchain.com/)
 [![FAISS](https://img.shields.io/badge/FAISS-Vector%20Search-00599C?logo=cplusplus&logoColor=white)](https://github.com/facebookresearch/faiss)
 [![Groq](https://img.shields.io/badge/Groq-LPU%20Inference-F55036?logo=fastapi&logoColor=white)](https://console.groq.com/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-Chat%20App-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)](https://documind-rag-ad.streamlit.app/)
+
+> 🚀 **Live Demo:** Try the deployed application directly at **[https://documind-rag-ad.streamlit.app/](https://documind-rag-ad.streamlit.app/)**
 
 **DocuMind AI** is an end-to-end, high-performance Retrieval-Augmented Generation (RAG) system. It indexes multi-format documents (PDF, TXT, DOCX, CSV), generates dense semantic vector embeddings with Sentence-Transformers, performs sub-millisecond similarity search using FAISS, and streams contextual answers via Groq's high-speed LLM inference.
 
