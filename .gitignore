@@ -1,4 +1,36 @@
-*.pdf
-.DS_Store
+# Environment variables and secrets
 .env
-__pycache__
+.env.local
+.env.*.local
+!.env.example
+
+# Python virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# User uploaded files and sensitive personal PDFs
+*.pdf
+data/uploads/
+data/pdf/
+
+# Vector stores & database indices (generated at runtime)
+faiss_store/
+data/vector_store/
+*.index
+*.pkl
+
+# Private notes
+INTERVIEW_GUIDE.md
+INTERVIEW_SCRIPT.md

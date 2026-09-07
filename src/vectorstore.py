@@ -4,7 +4,10 @@ import numpy as np
 import pickle
 from typing import List, Any
 from sentence_transformers import SentenceTransformer
-from embedding import EmbeddingPipeline
+try:
+    from src.embedding import EmbeddingPipeline
+except ImportError:
+    from embedding import EmbeddingPipeline
 
 class FaissVectorStore:
     def __init__(self, persist_dir: str = "faiss_store", embedding_model: str = "all-MiniLM-L6-v2", chunk_size: int = 1000, chunk_overlap: int = 200):
@@ -20,10 +23,23 @@ class FaissVectorStore:
 
     def build_from_documents(self, documents: List[Any]):
         print(f"[INFO] Building vector store from {len(documents)} raw documents...")
+        self.index = None
+        self.metadata = []
+        if not documents:
+            print("[WARN] No documents provided to build vector store.")
+            return
         emb_pipe = EmbeddingPipeline(model_name=self.embedding_model, chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap)
         chunks = emb_pipe.chunk_documents(documents)
         embeddings = emb_pipe.embed_chunks(chunks)
-        metadatas = [{"text": chunk.page_content} for chunk in chunks]
+        metadatas = [
+            {
+                "text": chunk.page_content,
+                "source": os.path.basename(chunk.metadata.get("source", "Document")),
+                "page": chunk.metadata.get("page", 1),
+                **{k: v for k, v in chunk.metadata.items() if k not in ["source", "page"]}
+            }
+            for chunk in chunks
+        ]
         self.add_embeddings(np.array(embeddings).astype('float32'), metadatas)
         self.save()
         print(f"[INFO] Vector store built and saved to {self.persist_dir}")
@@ -71,7 +87,10 @@ class FaissVectorStore:
 
 # Example usage
 if __name__ == "__main__":
-    from data_loader import load_all_documents
+    try:
+        from src.data_loader import load_all_documents
+    except ImportError:
+        from data_loader import load_all_documents
     docs = load_all_documents("data")
     store = FaissVectorStore("faiss_store")
     store.build_from_documents(docs)

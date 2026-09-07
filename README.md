@@ -1,50 +1,127 @@
-# RAG Retrieval-Augmented Generation Pipeline
+# ⚡ DocuMind AI — Modular Document RAG Engine
 
-This repository contains a Python-based retrieval-augmented generation system for indexing and querying a document corpus. It loads mixed document formats, splits them into overlapping chunks, creates vector embeddings, stores them in a FAISS index, and uses a Groq-hosted language model to summarize retrieved context.
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![LangChain](https://img.shields.io/badge/LangChain-v0.2-1C3C3C?logo=langchain&logoColor=white)](https://python.langchain.com/)
+[![FAISS](https://img.shields.io/badge/FAISS-Vector%20Search-00599C?logo=cplusplus&logoColor=white)](https://github.com/facebookresearch/faiss)
+[![Groq](https://img.shields.io/badge/Groq-LPU%20Inference-F55036?logo=fastapi&logoColor=white)](https://console.groq.com/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Chat%20App-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 
-The project uses modular coding rather than a monolithic architecture: ingestion, embedding, vector storage, and retrieval each live in dedicated modules under [src](src). That makes the codebase easy to extend for new document types, different embedding models, or alternative vector stores.
+**DocuMind AI** is an end-to-end, high-performance Retrieval-Augmented Generation (RAG) system. It indexes multi-format documents (PDF, TXT, DOCX, CSV), generates dense semantic vector embeddings with Sentence-Transformers, performs sub-millisecond similarity search using FAISS, and streams contextual answers via Groq's high-speed LLM inference.
 
-## What this project does
+---
 
-The core workflow is implemented across [src/data_loader.py](src/data_loader.py), [src/embedding.py](src/embedding.py), [src/vectorstore.py](src/vectorstore.py), and [src/search.py](src/search.py). It is designed for document-heavy knowledge retrieval tasks where a user asks a question and the system finds the most relevant passages before generating a concise answer.
+## ✨ Features
 
-## Interesting techniques used in the code
+- **🚀 Real-Time Token Streaming**: Experience instantaneous token-by-token generation powered by Groq's LPU.
+- **💬 Conversational UI**: Interactive ChatGPT-style chat interface with full conversation history and starter prompts.
+- **📁 Live Document Ingestion**: Upload custom PDFs, TXTs, DOCXs, or CSVs directly through the UI and dynamically re-index the corpus.
+- **🔍 Source Citations & Transparency**: Inspect exact retrieved chunk snippets, document names, page numbers, and similarity distances.
+- **⚙️ Model & Hyperparameter Switching**: Seamlessly toggle between models (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `qwen/qwen3.8-27b`, `groq/compound-mini`), adjust top-k retrieval chunks, and tweak response temperature.
+- **🧩 Clean Modular Architecture**: Fully decoupled ingestion, embedding, vector store, and search modules.
 
-- Document ingestion with LangChain community loaders in [src/data_loader.py](src/data_loader.py). The implementation supports PDF, text, CSV, Excel, Word, and JSON files through the LangChain community document loaders, which keeps the ingestion layer flexible without forcing a custom parser for each format. See [LangChain document loaders](https://python.langchain.com/docs/concepts/document_loaders).
-- Recursive chunking with overlap in [src/embedding.py](src/embedding.py). The project uses LangChain's recursive text splitter to break large documents into smaller passages while preserving local context. This is a standard but important technique for retrieval quality because it avoids splitting semantic units too aggressively. See [RecursiveCharacterTextSplitter](https://python.langchain.com/docs/how_to/recursive_text_splitter).
-- Dense embeddings with sentence-transformers in [src/embedding.py](src/embedding.py) and [src/vectorstore.py](src/vectorstore.py). The system converts text chunks into dense vector representations using the sentence-transformers library, which is a common choice for semantic search and retrieval tasks. See [sentence-transformers](https://www.sbert.net/).
-- Approximate and exact vector search with FAISS in [src/vectorstore.py](src/vectorstore.py). The repository builds a FAISS index from embeddings and then queries it for nearest-neighbor retrieval, which is a core piece of modern semantic search systems. See [FAISS](https://faiss.ai/).
-- Retrieval-augmented summarization in [src/search.py](src/search.py). The retrieval step is followed by an LLM call that summarizes the most relevant passages for a user query, which is the key pattern behind many RAG applications. See [LangChain](https://www.langchain.com/) and [Groq](https://console.groq.com/docs/).
-- Environment-based configuration with [src/search.py](src/search.py) and [.env.example](.env.example). The project reads API credentials from environment variables, which is a practical pattern for keeping secrets out of source control. See [python-dotenv](https://github.com/theskumar/python-dotenv).
+---
 
-## Notable libraries and technologies
+## 🏗️ Architecture Flow
 
-- [LangChain](https://www.langchain.com/) and [LangChain Community](https://python.langchain.com/docs/community): orchestration for document loading, chunking, and LLM integration.
-- [sentence-transformers](https://www.sbert.net/): embedding generation for semantic similarity search.
-- [FAISS](https://faiss.ai/): fast vector indexing and similarity search.
-- [Chroma](https://www.trychroma.com/): present in the repository as a persisted vector-store artifact under [data/vector_store](data/vector_store).
-- [Groq](https://console.groq.com/docs/) and [langchain-groq](https://python.langchain.com/docs/integrations/llms/groq): model serving and LLM access for summarization.
-- [PyPDF](https://pypi.org/project/pypdf/) and [PyMuPDF](https://pymupdf.readthedocs.io/): PDF parsing support.
-- [NumPy](https://numpy.org/): numerical array handling for embeddings and vector operations.
-- [python-dotenv](https://github.com/theskumar/python-dotenv): environment variable loading.
-
-## Project structure
-
-```text
-.
-├── data/
-│   ├── pdf/
-│   ├── text_files/
-│   └── vector_store/
-├── faiss_store/
-├── notebook/
-├── src/
-├── README.md
-├── requirements.txt
-└── .env.example
+```mermaid
+graph LR
+    A[📄 Raw Documents<br/>PDF, TXT, DOCX, CSV] --> B[✂️ Document Loader &<br/>Recursive Chunking]
+    B --> C[🧠 Sentence Transformers<br/>all-MiniLM-L6-v2]
+    C --> D[(⚡ FAISS Index &<br/>Metadata Store)]
+    E[👤 User Query] --> F[🔎 Vector Similarity Search]
+    D --> F
+    F --> G[📑 Top-K Retrieved Context]
+    G --> H[⚡ Groq LPU Engine<br/>Llama 3.1 / 3.3]
+    E --> H
+    H --> I[💬 Streamed Answer +<br/>Source Citations]
 ```
 
-- [data](data) contains the source documents and persisted vector-store artifacts. The [data/text_files](data/text_files) folder holds plain-text samples, while [data/pdf](data/pdf) is reserved for PDF-based corpora.
-- [faiss_store](faiss_store) is the runtime directory used by the FAISS index and metadata files created by [src/vectorstore.py](src/vectorstore.py).
-- [notebook](notebook) contains exploratory notebooks that help document the pipeline and its experiments.
-- [src](src) contains the application modules for ingestion, embedding, indexing, and retrieval.
+---
+
+## 🚀 Quick Start
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/<your-username>/documind-rag.git
+cd documind-rag
+```
+
+### 2. Set Up Virtual Environment
+```bash
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
+
+# macOS / Linux
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure Environment Variables
+Create a `.env` file from the template:
+```bash
+cp .env.example .env
+```
+Add your free [Groq API Key](https://console.groq.com/keys) inside `.env`:
+```env
+GROQ_API_KEY=gsk_your_groq_api_key_here
+```
+
+### 5. Launch the Web Application
+```bash
+streamlit run src/app.py
+```
+*The app will automatically launch in your browser at `http://localhost:8501`.*
+
+---
+
+## 📂 Project Structure
+
+```text
+documind-rag/
+├── data/                  # Document corpus (PDFs, text files, uploads)
+│   ├── text_files/        # Default starter text files
+│   └── uploads/           # User-uploaded files via UI
+├── faiss_store/           # Local FAISS index & metadata (generated at runtime)
+├── src/
+│   ├── app.py             # Streamlit conversational web interface
+│   ├── data_loader.py     # Multi-format document ingestion (PDF, TXT, CSV, DOCX)
+│   ├── embedding.py       # Text chunking & dense vector embedding pipeline
+│   ├── vectorstore.py     # FAISS vector store indexing, persistence & search
+│   └── search.py          # RAG pipeline orchestration, streaming & Groq LLM
+├── .env.example           # Example environment template
+├── .gitignore             # Git ignore rules for keys and vector indices
+├── README.md              # Documentation
+└── requirements.txt       # Project dependencies
+```
+
+---
+
+## 🌐 Deploying to Streamlit Cloud
+
+1. Push your repository to GitHub.
+2. Visit [Streamlit Community Cloud](https://share.streamlit.io/) and create a **New App**.
+3. Select your repository and set the main file path to:
+   ```text
+   src/app.py
+   ```
+4. In **Advanced Settings -> Secrets**, add:
+   ```toml
+   GROQ_API_KEY = "gsk_your_groq_api_key_here"
+   ```
+5. Click **Deploy**!
+
+---
+
+## 🛠️ Tech Stack
+
+- **Orchestration**: LangChain Core / Community
+- **Embeddings**: `sentence-transformers` (`all-MiniLM-L6-v2`)
+- **Vector Database**: FAISS (Facebook AI Similarity Search)
+- **LLM Serving**: Groq Cloud (`llama-3.1-8b-instant`, `llama-3.3-70b-versatile`)
+- **Frontend**: Streamlit
