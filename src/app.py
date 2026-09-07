@@ -64,20 +64,30 @@ st.markdown("""
 
 @st.cache_resource(show_spinner="⚡ Initializing DocuMind Vector Engine...")
 def load_rag_engine(api_key: str = None) -> RAGSearch:
-    return RAGSearch(persist_dir=str(FAISS_DIR), groq_api_key=api_key)
+    # Resolve secret on server-side without exposing to browser UI
+    resolved_key = api_key
+    if not resolved_key:
+        try:
+            if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
+                resolved_key = st.secrets["GROQ_API_KEY"]
+        except Exception:
+            pass
+    if not resolved_key:
+        resolved_key = os.getenv("GROQ_API_KEY")
+    return RAGSearch(persist_dir=str(FAISS_DIR), groq_api_key=resolved_key)
 
 
 # --- Sidebar ---
 with st.sidebar:
     st.markdown("### ⚙️ Engine Settings")
     
-    # API Key Handling
-    groq_api_key = os.getenv("GROQ_API_KEY", "")
+    # API Key Handling (Blank by default so server secret is never leaked to public visitors)
     user_api_key = st.text_input(
         "Groq API Key (Optional override)",
-        value=groq_api_key,
+        value="",
         type="password",
-        help="Leave blank to use the server GROQ_API_KEY from .env"
+        placeholder="Using server key by default",
+        help="Leave blank to use the secure server key. Enter a custom key only if you want to override."
     )
     
     # Model Selection
